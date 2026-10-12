@@ -10,8 +10,9 @@ public enum AccountType {
 	@JsonProperty("revenue") REVENUE,
 	@JsonProperty("expense") EXPENSE;
 
+	/** Assets and expenses grow with debits. Liabilities, equity and revenue grow with credits. */
 	public boolean isDebitNormal() {
-		if(this.equals(ASSET) || this.equals(EXPENSE)) return true;
-		return false;
+		return this == ASSET || this == EXPENSE;
 	}
+
 }

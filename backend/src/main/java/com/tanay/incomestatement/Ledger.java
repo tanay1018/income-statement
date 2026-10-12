@@ -42,6 +42,42 @@ public class Ledger {
 		}
 	}
 
+	public String company() {
+		return company;
+	}
+
+	public String currency() {
+		return currency;
+	}
+
+	public List<Account> accounts() {
+		return accounts;
+	}
+
+	public List<JournalEntry> journalEntries() {
+		return journalEntries;
+	}
+
+	/**
+	 * Every line of every posted entry dated from start to end, both inclusive.
+	 */
+	public List<PostedLine> postedLines(LocalDate start, LocalDate end) {
+		List<PostedLine> postedLines = new ArrayList<>();
+		for (JournalEntry entry : journalEntries) {
+			if (entry.status() != EntryStatus.POSTED) {
+				continue; // draft and void entries are not in the books
+			}
+			if (entry.date().isBefore(start) || entry.date().isAfter(end)) {
+				continue;
+			}
+			for (JournalLine line : entry.lines()) {
+				Account account = accountsByNumber.get(line.account());
+				postedLines.add(new PostedLine(entry, account, line.debit(), line.credit()));
+			}
+		}
+		return postedLines;
+	}
+
 	/**
 	 * Rejects an entry that breaks double entry. Every entry is checked, whatever its
 	 * status, so a bad file stops the app at startup and never produces a partial report.
@@ -76,22 +112,6 @@ public class Ledger {
 			throw new IllegalArgumentException(
 					"Entry " + entry.id() + " does not balance: debits " + debits + ", credits " + credits);
 		}
-	}
-
-	public String company() {
-		return company;
-	}
-
-	public String currency() {
-		return currency;
-	}
-
-	public List<Account> accounts() {
-		return accounts;
-	}
-
-	public List<JournalEntry> journalEntries() {
-		return journalEntries;
 	}
 
 	public record Account(
@@ -133,26 +153,6 @@ public class Ledger {
 			return credit.subtract(debit);
 		}
 
-	}
-
-	/**
-	 * Every line of every posted entry dated from start to end, both inclusive.
-	 */
-	public List<PostedLine> postedLines(LocalDate start, LocalDate end) {
-		List<PostedLine> postedLines = new ArrayList<>();
-		for (JournalEntry entry : journalEntries) {
-			if (entry.status() != EntryStatus.POSTED) {
-				continue; // draft and void entries are not in the books
-			}
-			if (entry.date().isBefore(start) || entry.date().isAfter(end)) {
-				continue;
-			}
-			for (JournalLine line : entry.lines()) {
-				Account account = accountsByNumber.get(line.account());
-				postedLines.add(new PostedLine(entry, account, line.debit(), line.credit()));
-			}
-		}
-		return postedLines;
 	}
 
 }

@@ -31,12 +31,12 @@ public class IncomeStatementService {
 	 * The income statement for entries dated from start to end, both inclusive.
 	 */
 	public IncomeStatement statement(LocalDate start, LocalDate end) {
-		Map<String, BigDecimal> net = netByAccount(start, end);
+		Map<String, BigDecimal> netAmounts = netAmountsByAccount(start, end);
 
-		Section revenue = section(net, Subtype.OPERATING_REVENUE, Subtype.CONTRA_REVENUE);
-		Section costOfGoodsSold = section(net, Subtype.COGS);
-		Section operatingExpenses = section(net, Subtype.OPERATING_EXPENSE);
-		Section otherIncome = section(net, Subtype.OTHER_INCOME);
+		Section revenue = buildSection(netAmounts, Subtype.OPERATING_REVENUE, Subtype.CONTRA_REVENUE);
+		Section costOfGoodsSold = buildSection(netAmounts, Subtype.COGS);
+		Section operatingExpenses = buildSection(netAmounts, Subtype.OPERATING_EXPENSE);
+		Section otherIncome = buildSection(netAmounts, Subtype.OTHER_INCOME);
 
 		BigDecimal grossProfit = revenue.total().subtract(costOfGoodsSold.total());
 		BigDecimal operatingIncome = grossProfit.subtract(operatingExpenses.total());
@@ -60,32 +60,32 @@ public class IncomeStatementService {
 	 * The net amount of each income statement account in the period, by account number.
 	 * An account with no posted line in the period is not in the map.
 	 */
-	private Map<String, BigDecimal> netByAccount(LocalDate start, LocalDate end) {
-		Map<String, BigDecimal> net = new HashMap<>();
+	private Map<String, BigDecimal> netAmountsByAccount(LocalDate start, LocalDate end) {
+		Map<String, BigDecimal> netAmounts = new HashMap<>();
 		for (PostedLine line : ledger.postedLines(start, end)) {
 			Account account = line.account();
 			if (account.subtype() == Subtype.BALANCE_SHEET) {
 				continue; // assets, liabilities and equity are not on the income statement
 			}
-			BigDecimal soFar = net.getOrDefault(account.number(), ZERO);
-			net.put(account.number(), soFar.add(line.amount()));
+			BigDecimal runningTotal = netAmounts.getOrDefault(account.number(), ZERO);
+			netAmounts.put(account.number(), runningTotal.add(line.amount()));
 		}
-		return net;
+		return netAmounts;
 	}
 
 	/**
 	 * One line per account of the given subtypes that had activity, in chart of accounts
 	 * order, and their total.
 	 */
-	private Section section(Map<String, BigDecimal> net, Subtype... subtypes) {
+	private Section buildSection(Map<String, BigDecimal> netAmounts, Subtype... subtypes) {
 		List<Line> lines = new ArrayList<>();
 		BigDecimal total = ZERO;
-		Set<Subtype> wanted = Set.of(subtypes);
+		Set<Subtype> sectionSubtypes = Set.of(subtypes);
 		for (Account account : ledger.accounts()) {
-			if (!wanted.contains(account.subtype())) {
+			if (!sectionSubtypes.contains(account.subtype())) {
 				continue;
 			}
-			BigDecimal amount = net.get(account.number());
+			BigDecimal amount = netAmounts.get(account.number());
 			if (amount == null) {
 				continue; // no activity in the period
 			}

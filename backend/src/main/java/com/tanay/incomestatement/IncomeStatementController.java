@@ -38,15 +38,15 @@ public class IncomeStatementController {
 	/** Spring throws this when start or end is not in the request. */
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ErrorResponse missingDate(MissingServletRequestParameterException e) {
-		return new ErrorResponse(e.getParameterName() + " is required, as YYYY-MM-DD");
+	public ErrorResponse missingDate(MissingServletRequestParameterException exception) {
+		return new ErrorResponse(exception.getParameterName() + " is required, as YYYY-MM-DD");
 	}
 
 	/** Spring throws this when a value is not a real date, such as 2026-02-30 or "yesterday". */
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ErrorResponse invalidDate(MethodArgumentTypeMismatchException e) {
-		return new ErrorResponse(e.getName() + " must be a valid date, as YYYY-MM-DD");
+	public ErrorResponse invalidDate(MethodArgumentTypeMismatchException exception) {
+		return new ErrorResponse(exception.getName() + " must be a valid date, as YYYY-MM-DD");
 	}
 
 	public record ErrorResponse(String message) {

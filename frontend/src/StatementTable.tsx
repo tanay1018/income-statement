@@ -46,7 +46,6 @@ type SectionRowsProps = {
   section: Section
 }
 
-// A section heading, one row per account, and the section total.
 function SectionRows({ title, totalLabel, section }: SectionRowsProps) {
   return (
     <tbody>
@@ -85,7 +84,6 @@ type SubtotalRowProps = {
   className?: string
 }
 
-// Gross profit, operating income or net income.
 function SubtotalRow({ label, amount, className = '' }: SubtotalRowProps) {
   return (
     <tbody>

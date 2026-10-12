@@ -16,28 +16,28 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  function load(start: string, end: string) {
-    fetchIncomeStatement(start, end)
-      .then((statement) => {
-        setStatement(statement)
+  function loadStatement(startDate: string, endDate: string) {
+    fetchIncomeStatement(startDate, endDate)
+      .then((loaded) => {
+        setStatement(loaded)
         setError(null)
       })
-      .catch((e: unknown) => {
+      .catch((cause: unknown) => {
         setStatement(null)
-        setError(e instanceof Error ? e.message : 'Something went wrong.')
+        setError(cause instanceof Error ? cause.message : 'Something went wrong.')
       })
       .finally(() => setLoading(false))
   }
 
   // Show the default period when the page opens. loading starts as true.
   useEffect(() => {
-    load(DEFAULT_START, DEFAULT_END)
+    loadStatement(DEFAULT_START, DEFAULT_END)
   }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLoading(true)
-    load(start, end)
+    loadStatement(start, end)
   }
 
   return (
@@ -45,11 +45,11 @@ function App() {
       <form className="filter" onSubmit={handleSubmit}>
         <label>
           Start date
-          <input type="date" value={start} onChange={(e) => setStart(e.target.value)} required />
+          <input type="date" value={start} onChange={(event) => setStart(event.target.value)} required />
         </label>
         <label>
           End date
-          <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} required />
+          <input type="date" value={end} onChange={(event) => setEnd(event.target.value)} required />
         </label>
         <button type="submit" disabled={loading}>
           {loading ? 'Loading…' : 'Run report'}
