@@ -1,18 +1,36 @@
+:root {
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --rule: #d9d9d9;
+  --paper: #ffffff;
+  --page: #f5f5f3;
+  --error: #b00020;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  color: #1a1a1a;
-  background: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--page);
 }
 
 main {
   max-width: 720px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 32px 16px 64px;
 }
+
+/* ---------- Date form ---------- */
 
 .filter {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: end;
   margin-bottom: 24px;
@@ -22,11 +40,68 @@ main {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.filter input,
+.filter button {
+  height: 36px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.filter button {
+  min-width: 110px;
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+  cursor: pointer;
+}
+
+.filter button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .error {
-  color: #b00020;
+  padding: 12px 16px;
+  color: var(--error);
+  background: var(--paper);
+  border: 1px solid var(--error);
+  border-radius: 4px;
+}
+
+/* ---------- Statement ---------- */
+
+.statement {
+  padding: 32px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.statement header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.statement header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.statement header p {
+  margin: 2px 0 0;
+}
+
+.statement header .currency {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 table {
@@ -36,7 +111,7 @@ table {
 
 th,
 td {
-  padding: 4px 8px;
+  padding: 5px 0;
   text-align: left;
   font-weight: normal;
 }
@@ -44,33 +119,53 @@ td {
 .amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paren-space {
+  visibility: hidden;
+}
+
+.section-title th {
+  padding-top: 20px;
+  font-weight: 600;
+}
+
+.line td:first-child {
+  padding-left: 16px;
 }
 
 .account-number {
   display: inline-block;
-  width: 56px;
-  color: #666;
+  width: 52px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.section-title th {
-  padding-top: 16px;
-  font-weight: 600;
+.no-activity {
+  color: var(--muted);
 }
 
 .section-total th,
 .section-total td {
-  border-top: 1px solid #999;
+  border-top: 1px solid var(--ink);
   font-weight: 600;
 }
 
 .subtotal th,
 .subtotal td {
-  padding-top: 12px;
+  padding-top: 16px;
   font-weight: 700;
 }
 
 .net-income th,
 .net-income td {
-  border-top: 2px solid #1a1a1a;
-  border-bottom: 3px double #1a1a1a;
+  padding-bottom: 8px;
+  border-bottom: 3px double var(--ink);
+}
+
+@media (max-width: 480px) {
+  .statement {
+    padding: 20px 16px;
+  }
 }

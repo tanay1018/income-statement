@@ -49,6 +49,15 @@ cd backend
 ./mvnw test
 ```
 
+The frontend has no test suite: it does no arithmetic and shows the backend's amounts as
+they are. It has a type check and a lint:
+
+```sh
+cd frontend
+npm run build
+npm run lint
+```
+
 ## Where things are
 
 ```text
