@@ -10,6 +10,8 @@ public enum AccountType {
 	@JsonProperty("revenue") REVENUE,
 	@JsonProperty("expense") EXPENSE;
 
-	// TODO (by hand): isDebitNormal()
-
+	public boolean isDebitNormal() {
+		if(this.equals(ASSET) || this.equals(EXPENSE)) return true;
+		return false;
+	}
 }
