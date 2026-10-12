@@ -1,5 +1,6 @@
 import type { IncomeStatement, Section } from './api'
 import { formatAmount } from './format'
+import LedgerWarnings from './LedgerWarnings'
 
 type Props = {
   statement: IncomeStatement
@@ -11,13 +12,19 @@ function StatementTable({ statement }: Props) {
   return (
     <section className="statement">
       <header>
-        <h1>{statement.company}</h1>
+        {statement.company && <h1>{statement.company}</h1>}
         <p>Income Statement</p>
         <p>
           For the period {statement.start} to {statement.end}
         </p>
-        <p className="currency">Amounts in {statement.currency}</p>
+        {statement.currency && <p className="currency">Amounts in {statement.currency}</p>}
       </header>
+
+      <LedgerWarnings
+        erroredAccounts={statement.erroredAccounts}
+        erroredEntries={statement.erroredEntries}
+        ledgerError={statement.ledgerError}
+      />
 
       <table>
         <SectionRows title="Revenue" totalLabel="Total revenue" section={statement.revenue} />

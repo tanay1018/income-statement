@@ -1,7 +1,6 @@
 package com.tanay.incomestatement;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,7 +14,8 @@ import com.tanay.incomestatement.Ledger.JournalLine;
 import com.tanay.incomestatement.Ledger.PostedLine;
 
 /**
- * Validation and postedLines, on small ledgers built directly from the records.
+ * postedLines and PostedLine.amount, on small ledgers built directly from the records.
+ * What makes an entry valid or errored is tested in LedgerReaderTest.
  */
 class LedgerTest {
 
@@ -93,101 +93,6 @@ class LedgerTest {
 	void debitToAnAssetIsPositiveAndCreditIsNegative() {
 		assertThat(amount(CASH, "100.00", "0.00")).isEqualByComparingTo("100.00");
 		assertThat(amount(CASH, "0.00", "30.00")).isEqualByComparingTo("-30.00");
-	}
-
-	// ---------- Validation ----------
-
-	@Test
-	void rejectsAnEntryThatDoesNotBalance() {
-		JournalEntry unbalanced = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED,
-				debit(CASH, "100.00"), credit(SALES, "90.00"));
-
-		assertThatThrownBy(() -> ledger(unbalanced))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("does not balance");
-	}
-
-	@Test
-	void rejectsAnUnbalancedEntryEvenWhenItIsADraft() {
-		JournalEntry unbalanced = entry("JE-DRAFT", "2026-01-10", EntryStatus.DRAFT,
-				debit(CASH, "100.00"), credit(SALES, "90.00"));
-
-		assertThatThrownBy(() -> ledger(unbalanced))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-DRAFT");
-	}
-
-	@Test
-	void acceptsAmountsThatAreEqualButWrittenWithDifferentScale() {
-		JournalEntry entry = entry("JE-1", "2026-01-10", EntryStatus.POSTED,
-				debit(CASH, "100.0"), credit(SALES, "100.00"));
-
-		assertThat(ledger(entry).postedLines(START, END)).hasSize(2);
-	}
-
-	@Test
-	void rejectsALineWithAnUnknownAccount() {
-		JournalEntry entry = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED,
-				debit(CASH, "100.00"), new JournalLine("9999", new BigDecimal("0.00"), new BigDecimal("100.00")));
-
-		assertThatThrownBy(() -> ledger(entry))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("unknown account 9999");
-	}
-
-	@Test
-	void rejectsALineWithBothADebitAndACredit() {
-		JournalEntry entry = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED,
-				new JournalLine("1000", new BigDecimal("100.00"), new BigDecimal("100.00")),
-				new JournalLine("4000", new BigDecimal("0.00"), new BigDecimal("0.00")));
-
-		assertThatThrownBy(() -> ledger(entry))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("both a debit and a credit");
-	}
-
-	@Test
-	void rejectsANegativeAmount() {
-		JournalEntry entry = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED,
-				debit(CASH, "-100.00"), credit(SALES, "-100.00"));
-
-		assertThatThrownBy(() -> ledger(entry))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("negative amount");
-	}
-
-	@Test
-	void rejectsAnAmountWithMoreThanTwoDecimals() {
-		JournalEntry entry = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED,
-				debit(CASH, "100.005"), credit(SALES, "100.005"));
-
-		assertThatThrownBy(() -> ledger(entry))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("more than two decimals");
-	}
-
-	@Test
-	void rejectsAnEntryWithFewerThanTwoLines() {
-		JournalEntry entry = entry("JE-BAD", "2026-01-10", EntryStatus.POSTED, debit(CASH, "0.00"));
-
-		assertThatThrownBy(() -> ledger(entry))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("JE-BAD")
-				.hasMessageContaining("fewer than two lines");
-	}
-
-	@Test
-	void rejectsAnAccountNumberListedTwice() {
-		Account duplicate = new Account("1000", "Petty Cash", AccountType.ASSET, Subtype.BALANCE_SHEET, true);
-
-		assertThatThrownBy(() -> new Ledger("Test Co", "USD", List.of(CASH, duplicate), List.of()))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("1000");
 	}
 
 	// ---------- Helpers ----------

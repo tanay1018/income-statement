@@ -55,6 +55,15 @@ class IncomeStatementControllerTest {
 	}
 
 	@Test
+	void suppliedLedgerHasNothingErrored() throws Exception {
+		mvc.perform(get("/income-statement?start=2026-01-01&end=2026-03-31"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.erroredAccounts.length()").value(0))
+				.andExpect(jsonPath("$.erroredEntries.length()").value(0))
+				.andExpect(jsonPath("$.ledgerError").doesNotExist());
+	}
+
+	@Test
 	void periodWithNoEntriesIsOkWithZeroTotals() throws Exception {
 		mvc.perform(get("/income-statement?start=2027-01-01&end=2027-12-31"))
 				.andExpect(status().isOk())

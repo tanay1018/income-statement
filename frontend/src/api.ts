@@ -11,9 +11,26 @@ export type Section = {
   total: string
 }
 
+// An account or a journal entry that failed validation, so it is in no total. position is
+// its place in the file, starting at 1. The other fields are as written in the file, and
+// null when missing.
+export type ErroredAccount = {
+  position: number
+  number: string | null
+  reasons: string[]
+}
+
+export type ErroredEntry = {
+  position: number
+  id: string | null
+  date: string | null
+  memo: string | null
+  reasons: string[]
+}
+
 export type IncomeStatement = {
-  company: string
-  currency: string
+  company: string | null
+  currency: string | null
   start: string
   end: string
   revenue: Section
@@ -23,6 +40,10 @@ export type IncomeStatement = {
   operatingIncome: string
   otherIncome: Section
   netIncome: string
+  erroredAccounts: ErroredAccount[]
+  erroredEntries: ErroredEntry[]
+  // Set when the ledger file could not be read at all.
+  ledgerError: string | null
 }
 
 // start and end are YYYY-MM-DD strings, as an <input type="date"> gives them.

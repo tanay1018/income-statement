@@ -14,8 +14,8 @@ import com.tanay.incomestatement.Ledger.JournalEntry;
 import com.tanay.incomestatement.Ledger.JournalLine;
 
 /**
- * Checks that ledger.json is read into the records as written: names, enums, dates and
- * exact amounts. No accounting rules are tested here.
+ * Checks that the supplied ledger.json is read into the records as written: names, enums,
+ * dates and exact amounts. No accounting rules are tested here.
  */
 @SpringBootTest
 class LedgerLoadingTest {
@@ -29,6 +29,13 @@ class LedgerLoadingTest {
 		assertThat(ledger.currency()).isEqualTo("USD");
 		assertThat(ledger.accounts()).hasSize(15);
 		assertThat(ledger.journalEntries()).hasSize(25);
+	}
+
+	@Test
+	void nothingInTheSuppliedLedgerIsErrored() {
+		assertThat(ledger.erroredAccounts()).isEmpty();
+		assertThat(ledger.erroredEntries()).isEmpty();
+		assertThat(ledger.fileError()).isNull();
 	}
 
 	@Test

@@ -53,7 +53,10 @@ public class IncomeStatementService {
 				operatingExpenses,
 				operatingIncome,
 				otherIncome,
-				netIncome);
+				netIncome,
+				ledger.erroredAccounts(),
+				ledger.erroredEntries(),
+				ledger.fileError());
 	}
 
 	/**

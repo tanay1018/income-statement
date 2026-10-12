@@ -7,11 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * The contents of ledger.json: the chart of accounts and the journal entries.
+ * The accounts and journal entries that passed validation, and the ones that did not.
+ * Only the valid ones are ever used in a statement. LedgerReader builds it from ledger.json.
  */
 public class Ledger {
 
@@ -19,63 +19,40 @@ public class Ledger {
 	private final String currency;
 	private final List<Account> accounts;
 	private final List<JournalEntry> journalEntries;
+	private final List<ErroredAccount> erroredAccounts;
+	private final List<ErroredEntry> erroredEntries;
+	private final String fileError;
 	// Built once when the ledger loads, so a journal line's account number can be resolved.
 	private final Map<String, Account> accountsByNumber = new HashMap<>();
 
-	@JsonCreator
 	public Ledger(
-			@JsonProperty("company") String company,
-			@JsonProperty("currency") String currency,
-			@JsonProperty("accounts") List<Account> accounts,
-			@JsonProperty("journal_entries") List<JournalEntry> journalEntries) {
+			String company,
+			String currency,
+			List<Account> accounts,
+			List<JournalEntry> journalEntries,
+			List<ErroredAccount> erroredAccounts,
+			List<ErroredEntry> erroredEntries,
+			String fileError) {
 		this.company = company;
 		this.currency = currency;
 		this.accounts = accounts;
 		this.journalEntries = journalEntries;
+		this.erroredAccounts = erroredAccounts;
+		this.erroredEntries = erroredEntries;
+		this.fileError = fileError;
 		for (Account account : accounts) {
-			if (accountsByNumber.put(account.number(), account) != null) {
-				throw new IllegalArgumentException("Account " + account.number() + " is listed twice");
-			}
-		}
-		for (JournalEntry entry : journalEntries) {
-			validate(entry);
+			accountsByNumber.put(account.number(), account);
 		}
 	}
 
-	/**
-	 * Rejects an entry that breaks double entry. Every entry is checked, whatever its
-	 * status, so a bad file stops the app at startup and never produces a partial report.
-	 */
-	private void validate(JournalEntry entry) {
-		if (entry.lines().size() < 2) {
-			throw new IllegalArgumentException("Entry " + entry.id() + " has fewer than two lines");
-		}
-		BigDecimal debits = BigDecimal.ZERO;
-		BigDecimal credits = BigDecimal.ZERO;
-		for (JournalLine line : entry.lines()) {
-			if (!accountsByNumber.containsKey(line.account())) {
-				throw new IllegalArgumentException(
-						"Entry " + entry.id() + " uses unknown account " + line.account());
-			}
-			if (line.debit().signum() < 0 || line.credit().signum() < 0) {
-				throw new IllegalArgumentException("Entry " + entry.id() + " has a negative amount");
-			}
-			if (line.debit().scale() > 2 || line.credit().scale() > 2) {
-				throw new IllegalArgumentException(
-						"Entry " + entry.id() + " has an amount with more than two decimals");
-			}
-			if (line.debit().signum() > 0 && line.credit().signum() > 0) {
-				throw new IllegalArgumentException(
-						"Entry " + entry.id() + " has a line with both a debit and a credit");
-			}
-			debits = debits.add(line.debit());
-			credits = credits.add(line.credit());
-		}
-		// compareTo, not equals: equals would treat 100.0 and 100.00 as different.
-		if (debits.compareTo(credits) != 0) {
-			throw new IllegalArgumentException(
-					"Entry " + entry.id() + " does not balance: debits " + debits + ", credits " + credits);
-		}
+	/** A ledger in which nothing is errored. */
+	public Ledger(String company, String currency, List<Account> accounts, List<JournalEntry> journalEntries) {
+		this(company, currency, accounts, journalEntries, List.of(), List.of(), null);
+	}
+
+	/** An empty ledger for a file that could not be read at all. */
+	public static Ledger unreadable(String fileError) {
+		return new Ledger(null, null, List.of(), List.of(), List.of(), List.of(), fileError);
 	}
 
 	public String company() {
@@ -94,12 +71,25 @@ public class Ledger {
 		return journalEntries;
 	}
 
+	public List<ErroredAccount> erroredAccounts() {
+		return erroredAccounts;
+	}
+
+	public List<ErroredEntry> erroredEntries() {
+		return erroredEntries;
+	}
+
+	/** Why the file could not be read, or null when it could. */
+	public String fileError() {
+		return fileError;
+	}
+
 	public record Account(
 			String number,
 			String name,
 			AccountType type,
 			Subtype subtype,
-			@JsonProperty("is_active") boolean active) {
+			@JsonProperty("is_active") Boolean active) {
 	}
 
 	public record JournalEntry(
@@ -114,6 +104,28 @@ public class Ledger {
 			String account,
 			BigDecimal debit,
 			BigDecimal credit) {
+	}
+
+	/**
+	 * An account that failed validation. position is its place in the file, starting at 1.
+	 * number is as written in the file, and null when it has none.
+	 */
+	public record ErroredAccount(
+			int position,
+			String number,
+			List<String> reasons) {
+	}
+
+	/**
+	 * A journal entry that failed validation. position is its place in the file, starting
+	 * at 1. id, date and memo are as written in the file, and null when missing.
+	 */
+	public record ErroredEntry(
+			int position,
+			String id,
+			String date,
+			String memo,
+			List<String> reasons) {
 	}
 
 	/**
